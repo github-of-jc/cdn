@@ -57,6 +57,11 @@ while conn:
 
 
 
+<<<<<<< HEAD
+=======
+print(LISTEN_PORT, FAKE_IP, SERVER_IP)
+# accept connections from clients
+>>>>>>> dff2bdd018e09503e1c9617c165e4dc948ae0b2b
 # open up another connection with a server
 # once both connections are established,
 #  the proxy should forward messages between the client and server
