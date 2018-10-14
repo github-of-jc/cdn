@@ -19,6 +19,7 @@ parser.add_argument('server_ip')
 args = parser.parse_args()
 LISTEN_PORT, FAKE_IP, SERVER_IP = args.listen_port, args.fake_ip, args.server_ip
 
+print(LISTEN_PORT, FAKE_IP, SERVER_IP)
 # accept connections from clients
 # open up another connection with a server
 # once both connections are established,
