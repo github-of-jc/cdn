@@ -12,14 +12,51 @@ import argparse
 # ./proxy <listen-port> <fake-ip> <server-ip>
 
 parser = argparse.ArgumentParser()
-parser.add_argument('listen_port')
+parser.add_argument('listen_port') 
 parser.add_argument('fake_ip')
 parser.add_argument('server_ip')
 
 args = parser.parse_args()
 LISTEN_PORT, FAKE_IP, SERVER_IP = args.listen_port, args.fake_ip, args.server_ip
+print('finished parsing')
+print(LISTEN_PORT, FAKE_IP, SERVER_IP)
+s = socket.socket()
+port = int(LISTEN_PORT)
+s.bind(('', port))
+print("socket binded to %s" %(port))
+print('created socket, now listen')
+s.listen(5) 
 
-# accept connections from clients
+print('print conn, addr')
+conn, addr = s.accept()
+print('Connected by', addr)
+while conn:
+
+	#open up connection with server
+	#server socket
+	ss = socket.socket()
+	server_ip = FAKE_IP
+	server_port = 8080
+	print('connect proxy to server at server ip', server_ip, ' port ', server_port)
+	a = ss.connect((server_ip, server_port))
+	print('ss connect successful')
+	print(a)
+	print('while conn')
+
+	while True:
+		print('recv data')
+		data = conn.recv(1024)
+		print(data)
+		print('if not data')
+		if not data:
+			print('conn.close')
+			conn.close()
+			ss.close()
+			print('conn.closed, now break')
+			break
+
+
+
 # open up another connection with a server
 # once both connections are established,
 #  the proxy should forward messages between the client and server
