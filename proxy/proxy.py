@@ -30,23 +30,24 @@ s.listen(5)
 print('print conn, addr')
 conn, addr = s.accept()
 print('Connected by', addr)
-while conn:
+while True:
 
 	#open up connection with server
 	#server socket
+	print('created socket')
 	ss = socket.socket()
 	server_ip = FAKE_IP
-	server_port = 8080
+	server_port = 8081
 	print('connect proxy to server at server ip', server_ip, ' port ', server_port)
-	a = ss.connect((server_ip, server_port))
+	ss.connect((server_ip, server_port))
 	print('ss connect successful')
-	print(a)
 	print('while conn')
 
 	while True:
 		print('recv data')
 		data = conn.recv(1024)
 		print(data)
+		ss.send(data)
 		print('if not data')
 		if not data:
 			print('conn.close')
