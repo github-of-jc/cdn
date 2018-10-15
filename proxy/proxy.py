@@ -45,12 +45,18 @@ while True:
 
 	while True:
 		print('recv data')
-		data = conn.recv(1024)
-		print(data)
-		ss.send(data)
-		print('if not data')
-		if not data:
-			print('conn.close')
+		cdata = conn.recv(1024)
+		print(cdata)
+		if '\n' in cdata:
+			ss.send(cdata)
+			print('expecting things back from server')
+			sdata = ss.recv(1024)
+			print(sdata)
+			print('trying to send client the serve data')
+			conn.send(sdata)
+			print('successful sending server data to client')
+		if not cdata:
+			print('not data, conn.close')
 			conn.close()
 			ss.close()
 			print('conn.closed, now break')
