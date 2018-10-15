@@ -30,7 +30,7 @@ s.listen(5)
 
 while True:
 	# print('beginning of client loop')
-	print('# print conn, addr')
+    # print('# print conn, addr')
 	conn, addr = s.accept()
 	print('Connected by', addr)
 	#open up connection with server
