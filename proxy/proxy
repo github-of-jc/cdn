@@ -1,7 +1,7 @@
 #!/usr/bin/env python2.7
 import sys
 import socket
-import thread
+import thr
 import select
 import time
 import re
@@ -18,8 +18,8 @@ parser.add_argument('server_ip')
 
 args = parser.parse_args()
 LISTEN_PORT, FAKE_IP, SERVER_IP = args.listen_port, args.fake_ip, args.server_ip
-print('finished parsing')
-print(LISTEN_PORT, FAKE_IP, SERVER_IP)
+# print('finished parsing')
+# print(LISTEN_PORT, FAKE_IP, SERVER_IP)
 s = socket.socket()
 port = int(LISTEN_PORT)
 s.bind(('', port))
@@ -29,13 +29,13 @@ s.listen(5)
 
 
 while True:
-	print('beginning of client loop')
-	print('print conn, addr')
+	# print('beginning of client loop')
+	print('# print conn, addr')
 	conn, addr = s.accept()
 	print('Connected by', addr)
 	#open up connection with server
 	#server socket
-	print('created socket')
+	print('created client connection')
 	try:
 		ss = socket.socket()
 		server_ip = FAKE_IP
@@ -43,43 +43,43 @@ while True:
 		print('connect proxy to server at server ip', server_ip, ' port ', server_port)
 		ss.connect((server_ip, server_port))
 		print('ss connect successful')
-		print('while conn')
+		# print('while conn')
 		cdata = 1
 		while cdata>0:
-			print("data is: " + str(cdata))
-			print('recv data')
+			print("client data is: \n" + str(cdata))
+			# print('recv data')
 			cdata = conn.recv(1024)
-			print('received cdata: ' + cdata)
+			# print('received cdata: ' + cdata)
 			if len(cdata)>0:
-				print(ss)
+				# print(ss)
 				
 				try:
-					print("trying to send cdata to ss")
+					# print("trying to send cdata to ss")
 					ss.send(cdata)
 					print('expecting things back from server')
 					sdata = ss.recv(1024)
 					if len(sdata) > 0:
-						print(sdata)
-						print('trying to send client the serve data')
+						print("server data is:\n" +  sdata)
+						# print('trying to send client the serve data')
 						conn.send(sdata)
 						print('successful sending server data to client')
 				except:
 					print('uh oh cannot send cdata to server')
 					try:
-						print('reestablish connection to server')
+						print('try reestablish connection to server')
 						ss = socket.socket()
 						server_ip = FAKE_IP
 						server_port = 8081
 						print('connect proxy to server at server ip', server_ip, ' port ', server_port)
 						ss.connect((server_ip, server_port))
 						print('ss connect successful')
-						print('while conn')
+						# print('while conn')
 					except:
-						print('cannot reestablish connection to server, break')
+						print('cannot reestablish connection to server, break client connection')
 						conn.close()
 						break
 			else:
-				print('cdata is empty')
+				print('client data is empty, break')
 				break
 		print("closing client connection")
 		conn.close()
@@ -88,21 +88,21 @@ while True:
 		ss.close()
 		print('server connection closed')
 	except:
-		print('uh oh cannot send cdata to server')
+		print('uh oh cannot send client data to server')
 		try:
-			print('reestablish connection to server')
+			print('try reestablish connection to server')
 			ss = socket.socket()
 			server_ip = FAKE_IP
 			server_port = 8081
 			print('connect proxy to server at server ip', server_ip, ' port ', server_port)
 			ss.connect((server_ip, server_port))
 			print('ss connect successful')
-			print('while conn')
+			# print('while conn')
 		except:
 			print('cannot reestablish connection to server, break')
 			conn.close()
 			break
-print('end of program')
+# print('end of program')
 
 
 
@@ -118,4 +118,4 @@ print('end of program')
 #    (once established a connection to the client)
 #    get server IP provided from command line argument
 #    use 8080 for port number
-# c. close connections to the client and server when either disconnects
+# c. close connections to the client and server when either disconnects'
