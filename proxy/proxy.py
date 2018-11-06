@@ -11,8 +11,8 @@ import re
 import signal
 import argparse
 
-# cd ~/project1-starter/proxy
-# ./proxy <listen-port> <fake-ip> <server-ip>
+#./proxy <log> <alpha> <listen-port> <fake-ip> <web-server-ip>
+
 
 # listen for connections from a browser on any IP address on 
 # the port specified as a command line argument
@@ -25,14 +25,21 @@ import argparse
 # proxy bind the socket to the fake IP address from command line
 
 parser = argparse.ArgumentParser()
+parser.add_argument('log') 
+parser.add_argument('alpha') 
+# the TCP port the proxy should listen on for accepting connection from browser
 parser.add_argument('listen_port') 
+# proxy bound to fake_ip for outbound connection to web servers
+# fake_ip can only be on of the clients' IP addresses under the network topo specified
 parser.add_argument('fake_ip')
+# ip address of the web server that proxy request video chuncks from 
+# one of the servers IP addresses under the network topolocy specified
 parser.add_argument('server_ip')
 
 args = parser.parse_args()
-LISTEN_PORT, FAKE_IP, SERVER_IP = args.listen_port, args.fake_ip, args.server_ip
-# print('finished parsing')
-# print(LISTEN_PORT, FAKE_IP, SERVER_IP)
+LOG, ALPHA, LISTEN_PORT, FAKE_IP, SERVER_IP = args.log, args.alpha, args.listen_port, args.fake_ip, args.server_ip
+print('finished parsing')
+print(LOG, ALPHA, LISTEN_PORT, FAKE_IP, SERVER_IP)
 s = socket.socket()
 port = int(LISTEN_PORT)
 s.bind(('', port))
@@ -42,38 +49,38 @@ s.listen(5)
 
 
 while True:
-	# print('beginning of client loop')
+	print('beginning of client loop')
 	print('# print conn, addr')
 	conn, addr = s.accept()
 	print('Connected by', addr)
-	#open up connection with server
-	#server socket
+	# open up connection with server
+	# server socket
 	print('created client connection')
 	try:
 		ss = socket.socket()
 		server_ip = FAKE_IP
-		server_port = 8081
+		server_port = 8080
 		print('connect proxy to server at server ip', server_ip, ' port ', server_port)
 		ss.connect((server_ip, server_port))
 		print('ss connect successful')
-		# print('while conn')
+		print('while conn')
 		cdata = 1
 		while cdata>0:
 			print("client data is: \n" + str(cdata))
-			# print('recv data')
+			print('recv data')
 			cdata = conn.recv(1024)
-			# print('received cdata: ' + cdata)
+			print('received cdata: ' + cdata)
 			if len(cdata)>0:
-				# print(ss)
+				print(ss)
 				
 				try:
-					# print("trying to send cdata to ss")
+					print("trying to send cdata to ss")
 					ss.send(cdata)
 					print('expecting things back from server')
 					sdata = ss.recv(1024)
 					if len(sdata) > 0:
 						print("server data is:\n" +  sdata)
-						# print('trying to send client the serve data')
+						print('trying to send client the serve data')
 						conn.send(sdata)
 						print('successful sending server data to client')
 				except:
@@ -82,11 +89,11 @@ while True:
 						print('try reestablish connection to server')
 						ss = socket.socket()
 						server_ip = FAKE_IP
-						server_port = 8081
+						server_port = 8080
 						print('connect proxy to server at server ip', server_ip, ' port ', server_port)
 						ss.connect((server_ip, server_port))
 						print('ss connect successful')
-						# print('while conn')
+						print('while conn')
 					except:
 						print('cannot reestablish connection to server, break client connection')
 						conn.close()
@@ -110,12 +117,12 @@ while True:
 			print('connect proxy to server at server ip', server_ip, ' port ', server_port)
 			ss.connect((server_ip, server_port))
 			print('ss connect successful')
-			# print('while conn')
+			print('while conn')
 		except:
 			print('cannot reestablish connection to server, break')
 			conn.close()
 			break
-# print('end of program')
+print('end of program')
 
 
 
