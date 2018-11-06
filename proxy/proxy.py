@@ -1,4 +1,7 @@
 #!/usr/bin/env python2.7
+#client: nc localhost 1236
+#this script: ./proxy.py 1236 127.0.0.1 8081
+#server: nc -l 8081
 import sys
 import socket
 import thread
