@@ -14,6 +14,16 @@ import argparse
 # cd ~/project1-starter/proxy
 # ./proxy <listen-port> <fake-ip> <server-ip>
 
+# listen for connections from a browser on any IP address on 
+# the port specified as a command line argument
+
+# accept multiple concurrent connections from web browsers
+# by starting a new thread or process 
+# for each new request
+
+# when proxy connects to a server
+# proxy bind the socket to the fake IP address from command line
+
 parser = argparse.ArgumentParser()
 parser.add_argument('listen_port') 
 parser.add_argument('fake_ip')
