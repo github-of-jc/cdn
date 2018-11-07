@@ -17,10 +17,7 @@ def recv_data(threadNum, conn, ss, fake_ip, server_port):
 	while 1:
 		print(str(threadNum) + 'cdata:' + str(cdata))
 		print(str(threadNum) + 'recv cdata')
-		conn.setblocking(0)
-		recv = select.select([conn], [], [], timeout_in_seconds)
-		if recv[0]:
-			packet = conn.recv(1024)
+		packet = conn.recv(1024)
 		print(str(threadNum) + 'packet is: \n' + packet)
 		if len(packet) < 1: 
 			break
@@ -160,6 +157,7 @@ LOG, ALPHA, LISTEN_PORT, FAKE_IP, fake_ip = args.log, args.alpha, args.listen_po
 print('finished parsing')
 print(LOG, ALPHA, LISTEN_PORT, FAKE_IP, fake_ip)
 s = socket.socket()
+s.settimeout(3.0)
 port = int(LISTEN_PORT)
 s.bind(('', port))
 print("socket binded to %s" %(port))
@@ -171,6 +169,7 @@ while True:
 	print('=====================================beginning of client loop for thread=' + str(threadNum))
 	print('# print conn, addr')
 	conn, addr = s.accept()
+	conn.settimeout(3.0)
 	print('Connected by', addr)
 	# open up connection with server
 	# server socket
