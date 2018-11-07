@@ -43,7 +43,7 @@ def recv_data(threadNum, conn, ss, fake_ip, server_port):
 					server_port = 8080
 					print(str(threadNum) + 'connect proxy to server at server ip', fake_ip, ' port ', server_port)
 					ss.connect((fake_ip, server_port))
-					print(str(threadNum) + 'ss connect successful')
+					print(str(threadNum) + 'ss connect successful, not sending or receiving tho')
 				except:
 					print(str(threadNum) + 'cannot reestablish connection to server, break client connection')
 					conn.close()
@@ -70,7 +70,7 @@ def connect_client_to_server(conn, addr, threadNum, s, port, LOG, ALPHA, FAKE_IP
 		print("enter recv data")
 		recv_data(threadNum, conn, ss, fake_ip, server_port)
 		print("exit recv data")
-		
+
 		print(str(threadNum) + "closing client connection")
 		conn.close()
 		print(str(threadNum) + 'client connection closed')
