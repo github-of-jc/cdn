@@ -11,73 +11,96 @@ import re
 import signal
 import argparse
 
+def recv_data(threadNum, conn, ss, fake_ip, server_port):
+	cdata = 1
+	print(str(threadNum) + 'entering while loop receiving data')
+	while cdata>0:
+		print(str(threadNum) + 'cdata:' + str(cdata))
+		cdata = None
+		print(str(threadNum) + "client data is: \n" + str(cdata))
+		print(str(threadNum) + 'recv data')
+		cdata = conn.recv(1024)
+		print(str(threadNum) + 'received cdata: ' + cdata)
+		if len(cdata)>0:
+			print('len(cdata>0)')
+			print(ss)
+			
+			try:
+				print(str(threadNum) + "trying to send cdata to ss")
+				ss.send(cdata)
+				print(str(threadNum) + 'expecting things back from server')
+				sdata = ss.recv(1024)
+				if len(sdata) > 0:
+					print(str(threadNum) + "server data is:\n" +  sdata)
+					print(str(threadNum) + 'trying to send client the serve data')
+					conn.send(sdata)
+					print(str(threadNum) + 'successful sending server data to client')
+			except:
+				print(str(threadNum) + 'uh oh cannot send cdata to server')
+				try:
+					print(str(threadNum) + 'try reestablish connection to server')
+					ss = socket.socket()
+					server_port = 8080
+					print(str(threadNum) + 'connect proxy to server at server ip', fake_ip, ' port ', server_port)
+					ss.connect((fake_ip, server_port))
+					print(str(threadNum) + 'ss connect successful')
+				except:
+					print(str(threadNum) + 'cannot reestablish connection to server, break client connection')
+					conn.close()
+					break
+		else:
+			print(str(threadNum) + 'client data is empty, break')
+			break
+
 def connect_client_to_server(conn, addr, threadNum, s, port, LOG, ALPHA, FAKE_IP):
 	print('=====================================beginning of thread=' + str(threadNum))
 
 	try:
 		ss = socket.socket()
-		server_ip = FAKE_IP
+		fake_ip = FAKE_IP
 		server_port = 8080
-		print('connect proxy to server at (fake) server ip', server_ip, ' port ', server_port)
-		ss.connect((server_ip, server_port))
-		print('ss connect successful')
-		print('while conn')
-		cdata = 1
-		while cdata>0:
-			print("client data is: \n" + str(cdata))
-			print('recv data')
-			cdata = conn.recv(1024)
-			print('received cdata: ' + cdata)
-			if len(cdata)>0:
-				print(ss)
-				
-				try:
-					print("trying to send cdata to ss")
-					ss.send(cdata)
-					print('expecting things back from server')
-					sdata = ss.recv(1024)
-					if len(sdata) > 0:
-						print("server data is:\n" +  sdata)
-						print('trying to send client the serve data')
-						conn.send(sdata)
-						print('successful sending server data to client')
-				except:
-					print('uh oh cannot send cdata to server')
-					try:
-						print('try reestablish connection to server')
-						ss = socket.socket()
-						server_ip = FAKE_IP
-						server_port = 8080
-						print('connect proxy to server at server ip', server_ip, ' port ', server_port)
-						ss.connect((server_ip, server_port))
-						print('ss connect successful')
-						print('while conn')
-					except:
-						print('cannot reestablish connection to server, break client connection')
-						conn.close()
-						break
-			else:
-				print('client data is empty, break')
-				break
-		print("closing client connection")
+		print(str(threadNum) + 'bind server socket to fake IP address before connecting')
+		ss.bind((fake_ip, server_port))
+		print(str(threadNum) + 'bind successful')
+		print(str(threadNum) + 'connect proxy to server at (fake) server ip', fake_ip, ' port ', server_port)
+		ss.connect((fake_ip, server_port))
+		print(str(threadNum) + 'ss connect successful')
+		print(str(threadNum) + 'while conn')
+
+		print("enter recv data")
+		recv_data(threadNum, conn, ss, fake_ip, server_port)
+		print("exit recv data")
+		
+		print(str(threadNum) + "closing client connection")
 		conn.close()
-		print('client connection closed')
-		print('closing server connection')
+		print(str(threadNum) + 'client connection closed')
+		print(str(threadNum) + 'closing server connection')
 		ss.close()
-		print('server connection closed')
+		print(str(threadNum) + 'server connection closed')
 	except:
-		print('uh oh cannot send client data to server')
+		print(str(threadNum) + 'uh oh cannot send client data to server')
 		try:
-			print('try reestablish connection to server')
+			print(str(threadNum) + 'try reestablish connection to server')
 			ss = socket.socket()
-			server_ip = FAKE_IP
+			fake_ip = FAKE_IP
 			server_port = 8080
-			print('connect proxy to server at server ip', server_ip, ' port ', server_port)
-			ss.connect((server_ip, server_port))
-			print('ss connect successful')
-			print('while conn')
+			print(str(threadNum) + 'connect proxy to server at server ip', fake_ip, ' port ', server_port)
+			ss.connect((fake_ip, server_port))
+			print(str(threadNum) + 'ss connect successful')
+			print(str(threadNum) + 'while conn')
+
+			print("enter recv data")
+			recv_data(threadNum, conn, ss, fake_ip, server_port)
+			print("exit recv data")
+			
+			print(str(threadNum) + "closing client connection")
+			conn.close()
+			print(str(threadNum) + 'client connection closed')
+			print(str(threadNum) + 'closing server connection')
+			ss.close()
+			print(str(threadNum) + 'server connection closed')
 		except:
-			print('cannot reestablish connection to server, break')
+			print(str(threadNum) + 'cannot reestablish connection to server, break')
 			conn.close()
 				
 #./proxy <log> <alpha> <listen-port> <fake-ip> <web-server-ip>
@@ -103,12 +126,12 @@ parser.add_argument('listen_port')
 parser.add_argument('fake_ip')
 # ip address of the web server that proxy request video chuncks from 
 # one of the servers IP addresses under the network topolocy specified
-parser.add_argument('server_ip')
+parser.add_argument('fake_ip')
 
 args = parser.parse_args()
-LOG, ALPHA, LISTEN_PORT, FAKE_IP, SERVER_IP = args.log, args.alpha, args.listen_port, args.fake_ip, args.server_ip
+LOG, ALPHA, LISTEN_PORT, FAKE_IP, fake_ip = args.log, args.alpha, args.listen_port, args.fake_ip, args.fake_ip
 print('finished parsing')
-print(LOG, ALPHA, LISTEN_PORT, FAKE_IP, SERVER_IP)
+print(LOG, ALPHA, LISTEN_PORT, FAKE_IP, fake_ip)
 s = socket.socket()
 port = int(LISTEN_PORT)
 s.bind(('', port))
