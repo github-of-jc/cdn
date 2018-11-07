@@ -16,7 +16,7 @@ def recv_data(threadNum, conn, ss, fake_ip, server_port):
 	print(str(threadNum) + 'entering while loop receiving data')
 	while 1:
 		print(str(threadNum) + 'cdata:' + str(cdata))
-		print(str(threadNum) + 'recv data')
+		print(str(threadNum) + 'recv cdata')
 		packet = conn.recv(1024)
 		print(str(threadNum) + 'packet is: \n' + packet)
 		if packet[-1] == '\n': 
@@ -29,17 +29,29 @@ def send_to_server(cdata, threadNum, conn, ss, fake_ip, server_port):
 	if len(cdata)>0:
 		print('len(cdata>0)')
 		print(ss)
+		sdata = ''
 		
 		try:
 			print(str(threadNum) + "trying to send cdata to ss")
 			ss.send(cdata)
+			print(str(threadNum) + 'cdata sent to server')
 			print(str(threadNum) + 'expecting things back from server')
 			sdata = ss.recv(1024)
+
+			while 1:
+				print(str(threadNum) + 'sdata:' + str(sdata))
+				print(str(threadNum) + 'recv sdata')
+				packet = ss.recv(1024)
+				print(str(threadNum) + 'packet is: \n' + packet)
+				if packet[-1] == '\n':
+					break
+				sdata = sdata + packet
 			if len(sdata) > 0:
 				print(str(threadNum) + "server data is:\n" +  sdata)
 				print(str(threadNum) + 'trying to send client the serve data')
 				conn.send(sdata)
 				print(str(threadNum) + 'successful sending server data to client')
+
 		except:
 			print(str(threadNum) + 'uh oh cannot send cdata to server')
 			try:
@@ -75,7 +87,9 @@ def connect_client_to_server(conn, addr, threadNum, s, port, LOG, ALPHA, FAKE_IP
 		cdata = recv_data(threadNum, conn, ss, fake_ip, server_port)
 		print("exit recv data")
 
-		send_to_server(cdata, threadNum, conn, ss, fake_ip, server_port)
+		print("enter send to server")
+		sdata = send_to_server(cdata, threadNum, conn, ss, fake_ip, server_port)
+		print("exit send to server")
 
 		print(str(threadNum) + "closing client connection")
 		conn.close()
