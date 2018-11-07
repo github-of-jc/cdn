@@ -19,7 +19,7 @@ def recv_data(threadNum, conn, ss, fake_ip, server_port):
 		print(str(threadNum) + 'recv cdata')
 		packet = conn.recv(1024)
 		print(str(threadNum) + 'packet is: \n' + packet)
-		if packet[-1] == '\n': 
+		if len(packet) < 1: 
 			break
 		cdata = cdata + packet
 	print(str(threadNum) + 'received cdata: ' + cdata)
@@ -110,8 +110,12 @@ def connect_client_to_server(conn, addr, threadNum, s, port, LOG, ALPHA, FAKE_IP
 			print(str(threadNum) + 'while conn')
 
 			print("enter recv data")
-			recv_data(threadNum, conn, ss, fake_ip, server_port)
-			print("exit recv data")
+			cdata = recv_data(threadNum, conn, ss, fake_ip, server_port)
+			print("exit recv dataaa")
+
+			print("enter send to server")
+			sdata = send_to_server(cdata, threadNum, conn, ss, fake_ip, server_port)
+			print("exit send to server")
 			
 			print(str(threadNum) + "closing client connection")
 			conn.close()
