@@ -17,7 +17,10 @@ def recv_data(threadNum, conn, ss, fake_ip, server_port):
 	while 1:
 		print(str(threadNum) + 'cdata:' + str(cdata))
 		print(str(threadNum) + 'recv cdata')
-		packet = conn.recv(1024)
+		conn.setblocking(0)
+		recv = select.select([conn], [], [], timeout_in_seconds)
+		if recv[0]:
+			packet = conn.recv(1024)
 		print(str(threadNum) + 'packet is: \n' + packet)
 		if len(packet) < 1: 
 			break
