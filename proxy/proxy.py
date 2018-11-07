@@ -17,7 +17,7 @@ def recv_data(threadNum, conn, ss, fake_ip, server_port):
 	while 1:
 		print(str(threadNum) + 'cdata:' + str(cdata))
 		print(str(threadNum) + 'recv cdata')
-		packet = conn.recv(1024)
+		packet = conn.recv(10000)
 		print(str(threadNum) + 'packet is: \n' + packet)
 		if len(packet) < 1: 
 			break
@@ -169,7 +169,6 @@ while True:
 	print('=====================================beginning of client loop for thread=' + str(threadNum))
 	print('# print conn, addr')
 	conn, addr = s.accept()
-	conn.settimeout(3.0)
 	print('Connected by', addr)
 	# open up connection with server
 	# server socket
