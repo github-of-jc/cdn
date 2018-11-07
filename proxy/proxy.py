@@ -19,7 +19,7 @@ def recv_data(threadNum, conn, ss, fake_ip, server_port):
 		print(str(threadNum) + 'recv data')
 		packet = conn.recv(1024)
 		print(str(threadNum) + 'packet is: \n' + packet)
-		if len(packet) <1: 
+		if packet[-1] == '\n': 
 			break
 		cdata = cdata + packet
 	print(str(threadNum) + 'received cdata: ' + cdata)
