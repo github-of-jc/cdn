@@ -22,8 +22,9 @@ def recv_data(threadNum, conn, ss, fake_ip, server_port):
 			break
 		cdata = cdata + packet
 	print(str(threadNum) + 'received cdata: ' + cdata)
+	return cdata
 
-	
+def send_to_server(cdata, threadNum, conn, ss, fake_ip, server_port):
 	if len(cdata)>0:
 		print('len(cdata>0)')
 		print(ss)
@@ -50,10 +51,9 @@ def recv_data(threadNum, conn, ss, fake_ip, server_port):
 			except:
 				print(str(threadNum) + 'cannot reestablish connection to server, break client connection')
 				conn.close()
-				break
+				
 	else:
 		print(str(threadNum) + 'client data is empty, break')
-		break
 
 def connect_client_to_server(conn, addr, threadNum, s, port, LOG, ALPHA, FAKE_IP):
 	print('=====================================beginning of thread=' + str(threadNum))
@@ -71,8 +71,10 @@ def connect_client_to_server(conn, addr, threadNum, s, port, LOG, ALPHA, FAKE_IP
 		print(str(threadNum) + 'while conn')
 
 		print("enter recv data")
-		recv_data(threadNum, conn, ss, fake_ip, server_port)
+		cdata = recv_data(threadNum, conn, ss, fake_ip, server_port)
 		print("exit recv data")
+
+		send_to_server(cdata, threadNum, conn, ss, fake_ip, server_port)
 
 		print(str(threadNum) + "closing client connection")
 		conn.close()
