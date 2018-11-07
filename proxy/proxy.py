@@ -12,45 +12,48 @@ import signal
 import argparse
 
 def recv_data(threadNum, conn, ss, fake_ip, server_port):
-	cdata = 1
+	cdata = ''
 	print(str(threadNum) + 'entering while loop receiving data')
-	while cdata>0:
+	while 1:
 		print(str(threadNum) + 'cdata:' + str(cdata))
-		cdata = None
-		print(str(threadNum) + "client data is: \n" + str(cdata))
 		print(str(threadNum) + 'recv data')
-		cdata = conn.recv(1024)
-		print(str(threadNum) + 'received cdata: ' + cdata)
-		if len(cdata)>0:
-			print('len(cdata>0)')
-			print(ss)
-			
-			try:
-				print(str(threadNum) + "trying to send cdata to ss")
-				ss.send(cdata)
-				print(str(threadNum) + 'expecting things back from server')
-				sdata = ss.recv(1024)
-				if len(sdata) > 0:
-					print(str(threadNum) + "server data is:\n" +  sdata)
-					print(str(threadNum) + 'trying to send client the serve data')
-					conn.send(sdata)
-					print(str(threadNum) + 'successful sending server data to client')
-			except:
-				print(str(threadNum) + 'uh oh cannot send cdata to server')
-				try:
-					print(str(threadNum) + 'try reestablish connection to server')
-					ss = socket.socket()
-					server_port = 8080
-					print(str(threadNum) + 'connect proxy to server at server ip', fake_ip, ' port ', server_port)
-					ss.connect((fake_ip, server_port))
-					print(str(threadNum) + 'ss connect successful, not sending or receiving tho')
-				except:
-					print(str(threadNum) + 'cannot reestablish connection to server, break client connection')
-					conn.close()
-					break
-		else:
-			print(str(threadNum) + 'client data is empty, break')
+		packet = conn.recv(1024)
+		if not packet: 
 			break
+		cdata = cdata + packet
+	print(str(threadNum) + 'received cdata: ' + cdata)
+
+	
+	if len(cdata)>0:
+		print('len(cdata>0)')
+		print(ss)
+		
+		try:
+			print(str(threadNum) + "trying to send cdata to ss")
+			ss.send(cdata)
+			print(str(threadNum) + 'expecting things back from server')
+			sdata = ss.recv(1024)
+			if len(sdata) > 0:
+				print(str(threadNum) + "server data is:\n" +  sdata)
+				print(str(threadNum) + 'trying to send client the serve data')
+				conn.send(sdata)
+				print(str(threadNum) + 'successful sending server data to client')
+		except:
+			print(str(threadNum) + 'uh oh cannot send cdata to server')
+			try:
+				print(str(threadNum) + 'try reestablish connection to server')
+				ss = socket.socket()
+				server_port = 8080
+				print(str(threadNum) + 'connect proxy to server at server ip', fake_ip, ' port ', server_port)
+				ss.connect((fake_ip, server_port))
+				print(str(threadNum) + 'ss connect successful, not sending or receiving tho')
+			except:
+				print(str(threadNum) + 'cannot reestablish connection to server, break client connection')
+				conn.close()
+				break
+	else:
+		print(str(threadNum) + 'client data is empty, break')
+		break
 
 def connect_client_to_server(conn, addr, threadNum, s, port, LOG, ALPHA, FAKE_IP):
 	print('=====================================beginning of thread=' + str(threadNum))
