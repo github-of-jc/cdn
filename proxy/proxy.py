@@ -14,15 +14,14 @@ import argparse
 def recv_data(threadNum, conn, ss, fake_ip, server_port):
 	cdata = ''
 	print(str(threadNum) + 'entering while loop receiving data')
-	while 1:
-		print(str(threadNum) + 'cdata:' + str(cdata))
-		print(str(threadNum) + 'recv cdata')
-		packet = conn.recv(10000)
-		print(str(threadNum) + 'packet is: \n' + packet)
-		if len(packet) < 1: 
-			break
-		cdata = cdata + packet
-	print(str(threadNum) + 'received cdata: ' + cdata)
+
+	print(str(threadNum) + 'cdata:' + str(cdata))
+	print(str(threadNum) + 'recv cdata')
+	packet = None
+	packet = conn.recv(10000)
+	print(str(threadNum) + 'packet is: \n' + packet)
+	cdata = cdata + packet
+	print(str(threadNum) + 'received cdata: ============================' + cdata)
 	return cdata
 
 def send_to_server(cdata, threadNum, conn, ss, fake_ip, server_port):
@@ -36,19 +35,19 @@ def send_to_server(cdata, threadNum, conn, ss, fake_ip, server_port):
 			ss.send(cdata)
 			print(str(threadNum) + 'cdata sent to server')
 			print(str(threadNum) + 'expecting things back from server')
-			sdata = ss.recv(1024)
-
+			
+			
 			while 1:
-				print(str(threadNum) + 'sdata:' + str(sdata))
 				print(str(threadNum) + 'recv sdata')
-				packet = ss.recv(1024)
-				print(str(threadNum) + 'packet is: \n' + packet)
-				if packet[-1] == '\n':
+				packet = ss.recv(10000)
+				if packet:
+					print(str(threadNum) + 'server packet is: \n' + packet)
+					sdata = sdata + packet
+				else:
 					break
-				sdata = sdata + packet
 			if len(sdata) > 0:
-				print(str(threadNum) + "server data is:\n" +  sdata)
-				print(str(threadNum) + 'trying to send client the serve data')
+				print(str(threadNum) + "server data is:===============================\n" +  sdata)
+				print(str(threadNum) + 'trying to send client the server data')
 				conn.send(sdata)
 				print(str(threadNum) + 'successful sending server data to client')
 
@@ -70,7 +69,7 @@ def send_to_server(cdata, threadNum, conn, ss, fake_ip, server_port):
 
 def connect_client_to_server(conn, addr, threadNum, s, port, LOG, ALPHA, FAKE_IP):
 	print('=====================================beginning of thread=' + str(threadNum))
-
+	
 	try:
 		ss = socket.socket()
 		fake_ip = FAKE_IP
@@ -82,21 +81,17 @@ def connect_client_to_server(conn, addr, threadNum, s, port, LOG, ALPHA, FAKE_IP
 		ss.connect((fake_ip, server_port))
 		print(str(threadNum) + 'ss connect successful')
 		print(str(threadNum) + 'while conn')
+	
+		while 1:
+			print("enter recv data")
+			cdata = recv_data(threadNum, conn, ss, fake_ip, server_port)
+			print("exit recv data")
 
-		print("enter recv data")
-		cdata = recv_data(threadNum, conn, ss, fake_ip, server_port)
-		print("exit recv data")
+			print("enter send to server")
+			sdata = send_to_server(cdata, threadNum, conn, ss, fake_ip, server_port)
+			print("exit send to server")
 
-		print("enter send to server")
-		sdata = send_to_server(cdata, threadNum, conn, ss, fake_ip, server_port)
-		print("exit send to server")
-
-		print(str(threadNum) + "closing client connection")
-		conn.close()
-		print(str(threadNum) + 'client connection closed')
-		print(str(threadNum) + 'closing server connection')
-		ss.close()
-		print(str(threadNum) + 'server connection closed')
+		
 	except:
 		print(str(threadNum) + 'uh oh cannot send client data to server')
 		try:
@@ -117,12 +112,7 @@ def connect_client_to_server(conn, addr, threadNum, s, port, LOG, ALPHA, FAKE_IP
 			sdata = send_to_server(cdata, threadNum, conn, ss, fake_ip, server_port)
 			print("exit send to server")
 			
-			print(str(threadNum) + "closing client connection")
-			conn.close()
-			print(str(threadNum) + 'client connection closed')
-			print(str(threadNum) + 'closing server connection')
-			ss.close()
-			print(str(threadNum) + 'server connection closed')
+		
 		except:
 			print(str(threadNum) + 'cannot reestablish connection to server, break')
 			conn.close()
@@ -157,7 +147,6 @@ LOG, ALPHA, LISTEN_PORT, FAKE_IP, fake_ip = args.log, args.alpha, args.listen_po
 print('finished parsing')
 print(LOG, ALPHA, LISTEN_PORT, FAKE_IP, fake_ip)
 s = socket.socket()
-s.settimeout(3.0)
 port = int(LISTEN_PORT)
 s.bind(('', port))
 print("socket binded to %s" %(port))
