@@ -24,9 +24,12 @@ def recv_data(threadNum, conn, ss, fake_ip, server_port):
 	#print(str(threadNum) + 'packet is: \n' + packet)
 	cdata = cdata + packet
 	#print(str(threadNum) + 'received cdata: ============================' + cdata)
-	return cdata
+	return cdata, ts
 
-def send_to_server(cdata, threadNum, conn, ss, fake_ip, server_port):
+def send_to_server(ts, cdata, threadNum, conn, ss, fake_ip, server_port):
+	print("received ts: " + str(ts))
+	tf = -1
+	chunk_size = -1
 	if len(cdata)>0:
 		print('len(cdata>0)')
 		print(ss)
@@ -55,6 +58,7 @@ def send_to_server(cdata, threadNum, conn, ss, fake_ip, server_port):
 				print("chunk size: " + str(len(sdata)))
 				conn.send(sdata)
 				print(str(threadNum) + 'successful sending server data to client')
+				
 
 		except:
 			print(str(threadNum) + 'uh oh cannot send cdata to server')
@@ -89,12 +93,15 @@ def connect_client_to_server(conn, addr, threadNum, s, port, LOG, ALPHA, FAKE_IP
 	
 		while 1:
 			print("enter recv data")
-			cdata = recv_data(threadNum, conn, ss, fake_ip, server_port)
+			cdata, ts = recv_data(threadNum, conn, ss, fake_ip, server_port)
 			print("exit recv data")
+			print("in main loop ts: " + str(ts))
 
 			print("enter send to server")
-			sdata = send_to_server(cdata, threadNum, conn, ss, fake_ip, server_port)
-			print("exit send to server")
+			tf, chunk_size = send_to_server(ts, cdata, threadNum, conn, ss, fake_ip, server_port)
+			print("========= \n tf: " + str(tf) + "\n chunksize: " + str(chunk_size
+))
+			print("exit send to server in try")
 
 		
 	except:
@@ -109,13 +116,13 @@ def connect_client_to_server(conn, addr, threadNum, s, port, LOG, ALPHA, FAKE_IP
 			print(str(threadNum) + 'ss connect successful')
 			print(str(threadNum) + 'while conn')
 
-			print("enter recv data")
-			cdata = recv_data(threadNum, conn, ss, fake_ip, server_port)
-			print("exit recv dataaa")
+			print("enter recv data in except")
+			cdata, ts = recv_data(threadNum, conn, ss, fake_ip, server_port)
+			print("exit recv dataaa in except")
 
-			print("enter send to server")
-			sdata = send_to_server(cdata, threadNum, conn, ss, fake_ip, server_port)
-			print("exit send to server")
+			print("enter send to server in except")
+			sdata = send_to_server(ts, cdata, threadNum, conn, ss, fake_ip, server_port)
+			print("exit send to server in except")
 			
 		
 		except:
