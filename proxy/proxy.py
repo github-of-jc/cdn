@@ -24,9 +24,9 @@ def recv_data(threadNum, conn, ss, fake_ip, server_port):
 	#print(str(threadNum) + 'packet is: \n' + packet)
 	cdata = cdata + packet
 	#print(str(threadNum) + 'received cdata: ============================' + cdata)
-	return cdata, ts
+	return cdata
 
-def send_to_server(ts, cdata, threadNum, conn, ss, fake_ip, server_port):
+def send_to_server(cdata, threadNum, conn, ss, fake_ip, server_port):
 	if len(cdata)>0:
 		print('len(cdata>0)')
 		print(ss)
