@@ -18,13 +18,15 @@ def recv_data(threadNum, conn, ss, fake_ip, server_port):
 	print(str(threadNum) + 'cdata:' + str(cdata))
 	print(str(threadNum) + 'recv cdata')
 	packet = None
+	ts = time.time()
+	print("before conn.recv, ts = " + str(ts))
 	packet = conn.recv(10000)
-	print(str(threadNum) + 'packet is: \n' + packet)
+	#print(str(threadNum) + 'packet is: \n' + packet)
 	cdata = cdata + packet
-	print(str(threadNum) + 'received cdata: ============================' + cdata)
-	return cdata
+	#print(str(threadNum) + 'received cdata: ============================' + cdata)
+	return cdata, ts
 
-def send_to_server(cdata, threadNum, conn, ss, fake_ip, server_port):
+def send_to_server(ts, cdata, threadNum, conn, ss, fake_ip, server_port):
 	if len(cdata)>0:
 		print('len(cdata>0)')
 		print(ss)
@@ -39,15 +41,18 @@ def send_to_server(cdata, threadNum, conn, ss, fake_ip, server_port):
 			
 			while 1:
 				print(str(threadNum) + 'recv sdata')
-				packet = ss.recv(10000)
+				packet = ss.recv(10000)	
 				if packet:
-					print(str(threadNum) + 'server packet is: \n' + packet)
+					#print(str(threadNum) + 'server packet is: \n' + packet)
 					sdata = sdata + packet
 				else:
 					break
+			tf = time.time()
+			print("time after receiving chunk: " + str(tf))
 			if len(sdata) > 0:
-				print(str(threadNum) + "server data is:===============================\n" +  sdata)
+				#print(str(threadNum) + "server data is:===============================\n" +  sdata)
 				print(str(threadNum) + 'trying to send client the server data')
+				print("chunk size: " + str(len(sdata)))
 				conn.send(sdata)
 				print(str(threadNum) + 'successful sending server data to client')
 
