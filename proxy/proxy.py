@@ -183,11 +183,11 @@ def connect_client_to_server(alpha,conn, addr, threadNum, s, port, LOG, ALPHA, F
 			print("in main loop ts: " + str(ts))
 			
 			if ismod:
-				print("enter send to server")
-				tf, chunk_size = reg_send_to_server(alpha, ts, cdata, threadNum, conn, ss, fake_ip, server_port)
+				print("enter MOD send to server")
+				tf, chunk_size = mod_send_to_server(alpha, ts, cdata, threadNum, conn, ss, fake_ip, server_port)
 				print("========= \n tf: " + str(tf) + "\n chunksize: " + str(chunk_size
 	))
-				print("exit send to server in try")
+				print("exit MOD send to server in try")
 			else:
 				print("enter send to server")
 				tf, chunk_size = reg_send_to_server(alpha, ts, cdata, threadNum, conn, ss, fake_ip, server_port)
