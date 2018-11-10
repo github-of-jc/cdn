@@ -181,12 +181,19 @@ def connect_client_to_server(alpha,conn, addr, threadNum, s, port, LOG, ALPHA, F
 			ismod, cdata, modcdata, ts = recv_data(threadNum, conn, ss, fake_ip, server_port)
 			print("exit recv data")
 			print("in main loop ts: " + str(ts))
-
-			print("enter send to server")
-			tf, chunk_size = reg_send_to_server(alpha, ts, cdata, threadNum, conn, ss, fake_ip, server_port)
-			print("========= \n tf: " + str(tf) + "\n chunksize: " + str(chunk_size
-))
-			print("exit send to server in try")
+			
+			if ismod:
+				print("enter send to server")
+				tf, chunk_size = reg_send_to_server(alpha, ts, cdata, threadNum, conn, ss, fake_ip, server_port)
+				print("========= \n tf: " + str(tf) + "\n chunksize: " + str(chunk_size
+	))
+				print("exit send to server in try")
+			else:
+				print("enter send to server")
+				tf, chunk_size = reg_send_to_server(alpha, ts, cdata, threadNum, conn, ss, fake_ip, server_port)
+				print("========= \n tf: " + str(tf) + "\n chunksize: " + str(chunk_size
+	))
+				print("exit send to server in try")
 
 		
 	except:
