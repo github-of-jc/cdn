@@ -25,12 +25,20 @@ def recv_data(threadNum, conn, ss, fake_ip, server_port):
 	cdata = cdata + packet
 	get_loc = cdata.find('\n')
 	extension_loc = cdata.find(' ', 4)
-	f = open(str(threadNum)+"cdata.xml", "w")
-	f.write(cdata)
-	f.write("extension is:\n" + cdata[extension_loc-3:extension_loc])
-	f.close()
-	print(str(threadNum) + 'received cdata: ============================' + cdata)
-	return cdata, ts
+	if cdata[extension_loc-4:extension_loc] == ".f4m":
+		modcdata = cdata.replace(".f4m","_nolist.f4m", 1)
+		f = open(str(threadNum)+"cdata_f4m.xml", "w")
+		f.write(cdata)
+		f.close()
+		print(str(threadNum) + 'received cdata: ============================' + modcdata)
+		return cdata, ts
+	else:
+		f = open(str(threadNum)+"cdata.xml", "w")
+		print("========!!!!!!\n" + cdata[extension_loc-4:extension_loc])
+		f.write(cdata)
+		f.close()
+		print(str(threadNum) + 'received cdata: ============================' + cdata)
+		return cdata, ts
 
 def send_to_server(alpha, ts, cdata, threadNum, conn, ss, fake_ip, server_port):
 	print("received ts: " + str(ts))
