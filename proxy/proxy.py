@@ -23,13 +23,18 @@ def recv_data(threadNum, conn, ss, fake_ip, server_port):
 	packet = conn.recv(10000)
 	#print(str(threadNum) + 'packet is: \n' + packet)
 	cdata = cdata + packet
-	#print(str(threadNum) + 'received cdata: ============================' + cdata)
+	f = open(str(threadNum)+"cdata.xml", "w")
+	f.write(cdata)
+	print(str(threadNum) + 'received cdata: ============================' + cdata)
 	return cdata, ts
 
-def send_to_server(ts, cdata, threadNum, conn, ss, fake_ip, server_port):
+def send_to_server(alpha, ts, cdata, threadNum, conn, ss, fake_ip, server_port):
 	print("received ts: " + str(ts))
+	print("alpha: " + str(alpha))
 	tf = -1
 	chunk_size = -1
+	#throughput
+	t = -1
 	if len(cdata)>0:
 		print('len(cdata>0)')
 		print(ss)
@@ -51,11 +56,17 @@ def send_to_server(ts, cdata, threadNum, conn, ss, fake_ip, server_port):
 				else:
 					break
 			tf = time.time()
-			print("time after receiving chunk: " + str(tf))
+			print("tf: " + str(tf))
 			if len(sdata) > 0:
 				#print(str(threadNum) + "server data is:===============================\n" +  sdata)
 				print(str(threadNum) + 'trying to send client the server data')
 				print("chunk size: " + str(len(sdata)))
+				print("calculate throughout:")
+				t = len(sdata)/(tf-ts)
+				print("throughput: " + str(t))
+				print("sdata:\n")
+				f = open(str(threadNum)+"sdata.xml", "w")
+				f.write(sdata)
 				conn.send(sdata)
 				print(str(threadNum) + 'successful sending server data to client')
 				
@@ -76,7 +87,7 @@ def send_to_server(ts, cdata, threadNum, conn, ss, fake_ip, server_port):
 	else:
 		print(str(threadNum) + 'client data is empty, break')
 
-def connect_client_to_server(conn, addr, threadNum, s, port, LOG, ALPHA, FAKE_IP):
+def connect_client_to_server(alpha,conn, addr, threadNum, s, port, LOG, ALPHA, FAKE_IP):
 	print('=====================================beginning of thread=' + str(threadNum))
 	
 	try:
@@ -98,7 +109,7 @@ def connect_client_to_server(conn, addr, threadNum, s, port, LOG, ALPHA, FAKE_IP
 			print("in main loop ts: " + str(ts))
 
 			print("enter send to server")
-			tf, chunk_size = send_to_server(ts, cdata, threadNum, conn, ss, fake_ip, server_port)
+			tf, chunk_size = send_to_server(alpha, ts, cdata, threadNum, conn, ss, fake_ip, server_port)
 			print("========= \n tf: " + str(tf) + "\n chunksize: " + str(chunk_size
 ))
 			print("exit send to server in try")
@@ -121,7 +132,7 @@ def connect_client_to_server(conn, addr, threadNum, s, port, LOG, ALPHA, FAKE_IP
 			print("exit recv dataaa in except")
 
 			print("enter send to server in except")
-			sdata = send_to_server(ts, cdata, threadNum, conn, ss, fake_ip, server_port)
+			sdata = send_to_server(alpha, ts, cdata, threadNum, conn, ss, fake_ip, server_port)
 			print("exit send to server in except")
 			
 		
@@ -174,7 +185,7 @@ while True:
 	# open up connection with server
 	# server socket
 	print('created client connection')
-	thread.start_new_thread(connect_client_to_server, (conn, addr, threadNum, s, port, LOG, ALPHA, FAKE_IP,))
+	thread.start_new_thread(connect_client_to_server, (ALPHA, conn, addr, threadNum, s, port, LOG, ALPHA, FAKE_IP,))
 	threadNum = threadNum + 1
 
 print('end of program')
