@@ -19,6 +19,7 @@ def recv_data(threadNum, conn, ss, fake_ip, server_port):
 	print(str(threadNum) + 'recv cdata')
 	packet = None
 	ts = time.time()
+	ismod = False
 	print("before conn.recv, ts = " + str(ts))
 	packet = conn.recv(10000)
 	#print(str(threadNum) + 'packet is: \n' + packet)
@@ -26,21 +27,81 @@ def recv_data(threadNum, conn, ss, fake_ip, server_port):
 	get_loc = cdata.find('\n')
 	extension_loc = cdata.find(' ', 4)
 	if cdata[extension_loc-4:extension_loc] == ".f4m":
+		ismod = True
 		modcdata = cdata.replace(".f4m","_nolist.f4m", 1)
 		f = open(str(threadNum)+"cdata_f4m.xml", "w")
 		f.write(cdata)
 		f.close()
 		print(str(threadNum) + 'received cdata: ============================' + modcdata)
-		return cdata, ts
+		return ismod, cdata, ts
 	else:
 		f = open(str(threadNum)+"cdata.xml", "w")
 		print("========!!!!!!\n" + cdata[extension_loc-4:extension_loc])
 		f.write(cdata)
 		f.close()
 		print(str(threadNum) + 'received cdata: ============================' + cdata)
-		return cdata, ts
+		return ismod, cdata, ts
 
-def send_to_server(alpha, ts, cdata, threadNum, conn, ss, fake_ip, server_port):
+def reg_send_to_server(alpha, ts, cdata, threadNum, conn, ss, fake_ip, server_port):
+	print("received ts: " + str(ts))
+	print("alpha: " + str(alpha))
+	tf = -1
+	chunk_size = -1
+	#throughput
+	t = -1
+	if len(cdata)>0:
+		print('len(cdata>0)')
+		print(ss)
+		sdata = ''
+		
+		try:
+			print(str(threadNum) + "trying to send cdata to ss")
+			ss.send(cdata)
+			print(str(threadNum) + 'cdata sent to server')
+			print(str(threadNum) + 'expecting things back from server')
+			
+			
+			while 1:
+				print(str(threadNum) + 'recv sdata')
+				packet = ss.recv(10000)	
+				if packet:
+					#print(str(threadNum) + 'server packet is: \n' + packet)
+					sdata = sdata + packet
+				else:
+					break
+			tf = time.time()
+			print("tf: " + str(tf))
+			if len(sdata) > 0:
+				#print(str(threadNum) + "server data is:===============================\n" +  sdata)
+				print(str(threadNum) + 'trying to send client the server data')
+				print("chunk size: " + str(len(sdata)))
+				print("calculate throughout:")
+				t = len(sdata)/(tf-ts)
+				print("throughput: " + str(t))
+				print("sdata:\n")
+				f = open(str(threadNum)+"sdata.xml", "w")
+				f.write(sdata)
+				conn.send(sdata)
+				print(str(threadNum) + 'successful sending server data to client')
+				
+
+		except:
+			print(str(threadNum) + 'uh oh cannot send cdata to server')
+			try:
+				print(str(threadNum) + 'try reestablish connection to server')
+				ss = socket.socket()
+				server_port = 8080
+				print(str(threadNum) + 'connect proxy to server at server ip', fake_ip, ' port ', server_port)
+				ss.connect((fake_ip, server_port))
+				print(str(threadNum) + 'ss connect successful, not sending or receiving tho')
+			except:
+				print(str(threadNum) + 'cannot reestablish connection to server, break client connection')
+				conn.close()
+				
+	else:
+		print(str(threadNum) + 'client data is empty, break')
+
+def mod_send_to_server(alpha, ts, modcdata, threadNum, conn, ss, fake_ip, server_port):
 	print("received ts: " + str(ts))
 	print("alpha: " + str(alpha))
 	tf = -1
@@ -116,12 +177,12 @@ def connect_client_to_server(alpha,conn, addr, threadNum, s, port, LOG, ALPHA, F
 	
 		while 1:
 			print("enter recv data")
-			cdata, ts = recv_data(threadNum, conn, ss, fake_ip, server_port)
+			ismod, cdata, ts = recv_data(threadNum, conn, ss, fake_ip, server_port)
 			print("exit recv data")
 			print("in main loop ts: " + str(ts))
 
 			print("enter send to server")
-			tf, chunk_size = send_to_server(alpha, ts, cdata, threadNum, conn, ss, fake_ip, server_port)
+			tf, chunk_size = reg_send_to_server(alpha, ts, cdata, threadNum, conn, ss, fake_ip, server_port)
 			print("========= \n tf: " + str(tf) + "\n chunksize: " + str(chunk_size
 ))
 			print("exit send to server in try")
@@ -140,11 +201,11 @@ def connect_client_to_server(alpha,conn, addr, threadNum, s, port, LOG, ALPHA, F
 			print(str(threadNum) + 'while conn')
 
 			print("enter recv data in except")
-			cdata, ts = recv_data(threadNum, conn, ss, fake_ip, server_port)
+			ismod, cdata, ts = recv_data(threadNum, conn, ss, fake_ip, server_port)
 			print("exit recv dataaa in except")
 
 			print("enter send to server in except")
-			sdata = send_to_server(alpha, ts, cdata, threadNum, conn, ss, fake_ip, server_port)
+			sdata = reg_send_to_server(alpha, ts, cdata, threadNum, conn, ss, fake_ip, server_port)
 			print("exit send to server in except")
 			
 		
