@@ -23,8 +23,12 @@ def recv_data(threadNum, conn, ss, fake_ip, server_port):
 	packet = conn.recv(10000)
 	#print(str(threadNum) + 'packet is: \n' + packet)
 	cdata = cdata + packet
+	get_loc = cdata.find('\n')
+	extension_loc = cdata.find(' ', 4)
 	f = open(str(threadNum)+"cdata.xml", "w")
 	f.write(cdata)
+	f.write("extension is:\n" + cdata[extension_loc-3:extension_loc])
+	f.close()
 	print(str(threadNum) + 'received cdata: ============================' + cdata)
 	return cdata, ts
 
