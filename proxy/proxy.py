@@ -102,7 +102,10 @@ def reg_send_to_server(alpha, ts, cdata, threadNum, conn, ss, fake_ip, server_po
 	else:
 		print(str(threadNum) + 'client data is empty, break')
 
-def mod_send_to_server(alpha, ts, modcdata, threadNum, conn, ss, fake_ip, server_port):
+def mod_send_to_server(alpha, ts, cdata, modcdata, threadNum, conn, ss, fake_ip, server_port):
+	print("#$#$%!$%!#$% IN MODDDDDDD*&^(*(U")
+	print(cdata)
+	print(modcdata)
 	print("received ts: " + str(ts))
 	print("alpha: " + str(alpha))
 	tf = -1
@@ -179,18 +182,20 @@ def connect_client_to_server(alpha,conn, addr, threadNum, s, port, LOG, ALPHA, F
 		while 1:
 			print("enter recv data")
 			ismod, cdata, modcdata, ts = recv_data(threadNum, conn, ss, fake_ip, server_port)
+			print("ISMODISMODISMOD")
+			print(ismod)
 			print("exit recv data")
 			print("in main loop ts: " + str(ts))
 			
 			if ismod:
 				print("enter MOD send to server")
-				tf, chunk_size = mod_send_to_server(alpha, ts, cdata, threadNum, conn, ss, fake_ip, server_port)
+				mod_send_to_server(alpha, ts, cdata, modcdata, threadNum, conn, ss, fake_ip, server_port)
 				print("========= \n tf: " + str(tf) + "\n chunksize: " + str(chunk_size
 	))
 				print("exit MOD send to server in try")
 			else:
 				print("enter send to server")
-				tf, chunk_size = reg_send_to_server(alpha, ts, cdata, threadNum, conn, ss, fake_ip, server_port)
+				reg_send_to_server(alpha, ts, cdata, threadNum, conn, ss, fake_ip, server_port)
 				print("========= \n tf: " + str(tf) + "\n chunksize: " + str(chunk_size
 	))
 				print("exit send to server in try")
@@ -210,11 +215,19 @@ def connect_client_to_server(alpha,conn, addr, threadNum, s, port, LOG, ALPHA, F
 
 			print("enter recv data in except")
 			ismod, cdata, modcdata, ts = recv_data(threadNum, conn, ss, fake_ip, server_port)
-			print("exit recv dataaa in except")
-
-			print("enter send to server in except")
-			sdata = reg_send_to_server(alpha, ts, cdata, threadNum, conn, ss, fake_ip, server_port)
-			print("exit send to server in except")
+			print("ISMODISMODISMOD")
+			print(ismod)
+			if ismod:
+				print("enter MOD send to server")
+				mod_send_to_server(alpha, ts, cdata, modcdata, threadNum, conn, ss, fake_ip, server_port)
+				print("========= \n tf: " + str(tf) + "\n chunksize: " + str(chunk_size
+	))
+				print("exit MOD send to server in try")
+			else:
+				print("enter send to server")
+				reg_send_to_server(alpha, ts, cdata, threadNum, conn, ss, fake_ip, server_port)
+				print("========= \n tf: " + str(tf) + "\n chunksize: " + str(chunk_size
+	))
 			
 		
 		except:
