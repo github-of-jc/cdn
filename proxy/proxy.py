@@ -20,6 +20,7 @@ def recv_data(threadNum, conn, ss, fake_ip, server_port):
 	packet = None
 	ts = time.time()
 	ismod = False
+	modcdata = None
 	print("before conn.recv, ts = " + str(ts))
 	packet = conn.recv(10000)
 	#print(str(threadNum) + 'packet is: \n' + packet)
@@ -33,14 +34,14 @@ def recv_data(threadNum, conn, ss, fake_ip, server_port):
 		f.write(cdata)
 		f.close()
 		print(str(threadNum) + 'received cdata: ============================' + modcdata)
-		return ismod, cdata, ts
+		return ismod, cdata, modcdata, ts
 	else:
 		f = open(str(threadNum)+"cdata.xml", "w")
 		print("========!!!!!!\n" + cdata[extension_loc-4:extension_loc])
 		f.write(cdata)
 		f.close()
 		print(str(threadNum) + 'received cdata: ============================' + cdata)
-		return ismod, cdata, ts
+		return ismod, cdata, modcdata, ts
 
 def reg_send_to_server(alpha, ts, cdata, threadNum, conn, ss, fake_ip, server_port):
 	print("received ts: " + str(ts))
@@ -177,7 +178,7 @@ def connect_client_to_server(alpha,conn, addr, threadNum, s, port, LOG, ALPHA, F
 	
 		while 1:
 			print("enter recv data")
-			ismod, cdata, ts = recv_data(threadNum, conn, ss, fake_ip, server_port)
+			ismod, cdata, modcdata, ts = recv_data(threadNum, conn, ss, fake_ip, server_port)
 			print("exit recv data")
 			print("in main loop ts: " + str(ts))
 
@@ -201,7 +202,7 @@ def connect_client_to_server(alpha,conn, addr, threadNum, s, port, LOG, ALPHA, F
 			print(str(threadNum) + 'while conn')
 
 			print("enter recv data in except")
-			ismod, cdata, ts = recv_data(threadNum, conn, ss, fake_ip, server_port)
+			ismod, cdata, modcdata, ts = recv_data(threadNum, conn, ss, fake_ip, server_port)
 			print("exit recv dataaa in except")
 
 			print("enter send to server in except")
