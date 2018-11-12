@@ -56,7 +56,7 @@ def recv_data(threadNum, conn, ss, fake_ip, server_port):
 		print(str(threadNum) + 'received cdata: ============================' + cdata)
 		return ismod, cdata, modcdata, ts, chunk_name
 
-def reg_send_to_server(chunk_name, logf, alpha, ts, cdata, threadNum, conn, ss, fake_ip, server_port):
+def reg_send_to_server(currtp, chunk_name, logf, alpha, ts, cdata, threadNum, conn, ss, fake_ip, server_port):
 	print("received ts: " + str(ts))
 	print("alpha: " + str(alpha))
 	tf = -1
@@ -64,7 +64,7 @@ def reg_send_to_server(chunk_name, logf, alpha, ts, cdata, threadNum, conn, ss, 
 	avgtp = -1
 	chunk_size = -1
 	#throughput
-	tp = 10
+	currtp = 10
 	if len(cdata)>0:
 		print('len(cdata>0)')
 		print(ss)
@@ -94,16 +94,21 @@ def reg_send_to_server(chunk_name, logf, alpha, ts, cdata, threadNum, conn, ss, 
 				print(str(threadNum) + 'trying to send client the server data')
 				print("chunk size: " + str(chunk_size))
 				print("calculate throughout:")
-				tp = chunk_size/(tf-ts)
-				logf.write(str(tf) + " " + str(tdiff) + " " + str(tp) + " " + str(avgtp) + " " + str(req_bitrate) + " " + str(fake_ip) + " " + str(chunk_name))
 
-				print("throughput: " + str(tp))
-				print("sdata:\n")
+				newtp = chunk_size/(tf-ts)
+				print("newtp: " + str(newtp))
+				avgtp = alpha * newtp + (1-alpha) * currtp	
+				print("avgtp: " + str(avgtp))
+				avgtp = alpha * newtp + (1-alpha) * currtp	
+				logf.write(str(tf) + " " + str(tdiff) + " " + str(newtp) + " " + str(avgtp) + " " + str(req_bitrate) + " " + str(fake_ip) + " " + str(chunk_name))
+				
+				print("reg curr throughput: " + str(currtp))
+
 				f = open(str(threadNum)+"sdata.xml", "w")
 				f.write(sdata)
 				conn.send(sdata)
 				print(str(threadNum) + 'successful sending server data to client')
-				return tp
+				return avgtp, chunk_size
 
 		except Exception as e:
 			print("ERROR:" + str(e))
@@ -123,7 +128,7 @@ def reg_send_to_server(chunk_name, logf, alpha, ts, cdata, threadNum, conn, ss, 
 	else:
 		print(str(threadNum) + 'client data is empty, break')
 
-def f4m_send_to_server(chunk_name, logf, alpha, ts, cdata, modcdata, threadNum, conn, ss, fake_ip, server_port):
+def f4m_send_to_server(currtp, chunk_name, logf, alpha, ts, cdata, modcdata, threadNum, conn, ss, fake_ip, server_port):
 	print("#$#$%!$%!#$% IN MODDDDDDD*&^(*(U")
 	print(cdata)
 	print(modcdata)
@@ -134,7 +139,7 @@ def f4m_send_to_server(chunk_name, logf, alpha, ts, cdata, modcdata, threadNum, 
 	chunk_size = -1
 	avgtp = -1
 	#throughput
-	tp = 10
+	currtp = 10
 	if len(cdata)>0:
 		print('len(cdata>0)')
 		print(ss)
@@ -158,15 +163,19 @@ def f4m_send_to_server(chunk_name, logf, alpha, ts, cdata, modcdata, threadNum, 
 			tf = time.time()
 			tdiff = tf-ts
 			print("tf: " + str(tf))
-			if len(sdata) > 0:
+			chunk_size = len(sdata)
+			if chunk_size > 0:
 				#print(str(threadNum) + "server data is:===============================\n" +  sdata)
 				print(str(threadNum) + 'trying to send client the server data')
-				print("chunk size: " + str(len(sdata)))
+				print("chunk size: " + str(chunk_size))
 				print("calculate throughout:")
-				tp = len(sdata)/(tf-ts)
-				logf.write(str(tf) + " " + str(tdiff) + " " + str(tp) + " " + str(avgtp) + " " + str(req_bitrate) + " " + str(fake_ip) + " " + str(chunk_name))
-				print("throughput: " + str(tp))
-				print("sdata:\n")
+				newtp = chunk_size/(tf-ts)
+				print("newtp: " + str(newtp))
+				avgtp = alpha * newtp + (1-alpha) * currtp	
+				print("avgtp: " + str(avgtp))
+				avgtp = alpha * newtp + (1-alpha) * currtp	
+				logf.write(str(tf) + " " + str(tdiff) + " " + str(avgtp) + " " + str(avgtp) + " " + str(req_bitrate) + " " + str(fake_ip) + " " + str(chunk_name))
+				print("f4m curr throughput: " + str(currtp))
 				f = open(str(threadNum)+"modsdata.xml", "w")
 				f.write(sdata)
 				conn.send(sdata)
@@ -186,13 +195,13 @@ def f4m_send_to_server(chunk_name, logf, alpha, ts, cdata, modcdata, threadNum, 
 							loc = sdata.find("bitrate", loc+1)
 							print(loc!=-1)
 						print("final loc_list:\n" + str(loc_list))
-						return loc_list, tp, tf, len(sdata)
+						return loc_list, avgtp, tf, len(sdata)
 					except Exception as e:
 						print("ERROR:" + str(e))
 						print("CAN'T FIND LOC")
 				else:
 					print(":C:C:C:C:C:C:C:CC:C:C:CC:C:CC:C:C:C:C:C:C:C:C:C:C:C:C:C:CC:C:C:C:C:C:C:C::CC:C:C:C:C:C:C")
-				return loc, tp, tf, len(sdata)
+				return loc_list, avgtp, tf, chunk_size
 
 		except Exception as e:
 			print("ERROR:" + str(e))
@@ -246,22 +255,25 @@ def mod_send_to_server(currtp, chunk_name, logf, alpha, ts, cdata, modcdata, thr
 			tf = time.time()
 			tdiff = tf-ts
 			print("tf: " + str(tf))
+			chunk_size = len(sdata)
 			if len(sdata) > 0:
 				#print(str(threadNum) + "server data is:===============================\n" +  sdata)
 				print(str(threadNum) + 'trying to send client the server data')
 				print("chunk size: " + str(len(sdata)))
 				print("calculate throughout:")
-				newtp = len(sdata)/(tf-ts)
-				currtp = alpha * newtp + (1-alpha) * currtp	
-				logf.write(str(tf) + " " + str(tdiff) + " " + str(currtp) + " " + str(avgtp) + " " + str(req_bitrate) + " " + str(fake_ip) + " " + str(chunk_name))
-				print("throughput: " + str(currtp))
+				newtp = chunk_size/(tf-ts)
+				print("newtp: " + str(newtp))
+				avgtp = alpha * newtp + (1-alpha) * currtp	
+				print("avgtp: " + str(avgtp))
+				logf.write(str(tf) + " " + str(tdiff) + " " + str(avgtp) + " " + str(avgtp) + " " + str(req_bitrate) + " " + str(fake_ip) + " " + str(chunk_name))
+				print("mod curr throughput: " + str(currtp))
 					
 
 				f = open(str(threadNum)+"modsdata.xml", "w")
 				f.write(sdata)
 				conn.send(sdata)
 				print(str(threadNum) + 'successful sending server data to client')
-				return currtp, tf, chunk_size
+				return avgtp, tf, chunk_size
 
 		except Exception as e:
 			print("ERROR:" + str(e))
@@ -281,9 +293,8 @@ def mod_send_to_server(currtp, chunk_name, logf, alpha, ts, cdata, modcdata, thr
 	else:
 		print(str(threadNum) + 'client data is empty, break')
 
-def connect_client_to_server(logf, conn, addr, threadNum, ts, port, LOG, alpha, FAKE_IP):
+def connect_client_to_server(tp, logf, conn, addr, threadNum, ts, port, LOG, alpha, FAKE_IP):
 	print('=====================================beginning of thread=' + str(threadNum))
-	tp = -1
 	tf = -1
 	chunk_size = -1
 	f4m = 1
@@ -311,11 +322,11 @@ def connect_client_to_server(logf, conn, addr, threadNum, ts, port, LOG, alpha, 
 			
 			if ismod == f4m:
 				print("enter MOD send to server")
-				loc_list, tp, tf, chunk_size = f4m_send_to_server(chunk_name, logf, alpha, ts, cdata, modcdata, threadNum, conn, ss, fake_ip, server_port)
+				loc_list, tp, tf, chunk_size = f4m_send_to_server(tp, chunk_name, logf, alpha, ts, cdata, modcdata, threadNum, conn, ss, fake_ip, server_port)
 				print("========= \n tf: " + str(tf) + "\n chunksize: " + str(chunk_size
 	))
 				print("exit MOD send to server in try\n go into reg send")
-				tp = reg_send_to_server(chunk_name, logf, alpha, ts, cdata, threadNum, conn, ss, fake_ip, server_port)
+				tp, chunk_size = reg_send_to_server(tp, chunk_name, logf, alpha, ts, cdata, threadNum, conn, ss, fake_ip, server_port)
 				print(str(threadNum) + "loc_list:")
 				print(str(threadNum) + str(loc_list))
 				print(str(threadNum) + "throughput")
@@ -333,7 +344,7 @@ def connect_client_to_server(logf, conn, addr, threadNum, ts, port, LOG, alpha, 
 				print("exit reg send")
 			else:
 				print("enter send to server")
-				tp = reg_send_to_server(chunk_name, logf, alpha, ts, cdata, threadNum, conn, ss, fake_ip, server_port)
+				tp, chunk_size = reg_send_to_server(tp, chunk_name, logf, alpha, ts, cdata, threadNum, conn, ss, fake_ip, server_port)
 				print("========= \n tf: " + str(tf) + "\n chunksize: " + str(chunk_size
 	))
 				print("exit send to server in try\nthroughput:" + str(tp))
@@ -360,11 +371,11 @@ def connect_client_to_server(logf, conn, addr, threadNum, ts, port, LOG, alpha, 
 			print(ismod)
 			if ismod == f4m:
 				print("enter MOD send to server")
-				loc_list, tp, tf, chunk_size = f4m_send_to_server(chunk_name, logf, alpha, ts, cdata, modcdata, threadNum, conn, ss, fake_ip, server_port)
+				loc_list, tp, tf, chunk_size = f4m_send_to_server(tp, chunk_name, logf, alpha, ts, cdata, modcdata, threadNum, conn, ss, fake_ip, server_port)
 				print("========= \n tf: " + str(tf) + "\n chunksize: " + str(chunk_size
 	))
 				print("exit MOD send to server in try\n go into reg send")
-				tp = reg_send_to_server(chunk_name, logf, alpha, ts, cdata, threadNum, conn, ss, fake_ip, server_port)
+				tp, chunk_size = reg_send_to_server(tp, chunk_name, logf, alpha, ts, cdata, threadNum, conn, ss, fake_ip, server_port)
 				print(str(threadNum) + "loc_list:")
 				print(str(threadNum) + str(loc_list))
 				print(str(threadNum) + "throughput")
@@ -382,7 +393,7 @@ def connect_client_to_server(logf, conn, addr, threadNum, ts, port, LOG, alpha, 
 				print("exit reg send")
 			else:
 				print("enter send to server")
-				tp = reg_send_to_server(chunk_name, logf, alpha, ts, cdata, threadNum, conn, ss, fake_ip, server_port)
+				tp, chunk_size = reg_send_to_server(tp, chunk_name, logf, alpha, ts, cdata, threadNum, conn, ss, fake_ip, server_port)
 				print("========= \n tf: " + str(tf) + "\n chunksize: " + str(chunk_size
 	))
 			print("exit send to server in except\nthroughput:" + str(tp))
@@ -405,7 +416,7 @@ def init_connection(logf, conn, addr, threadNum, s, port, LOG, ALPHA, FAKE_IP):
 	tp = 10
 	tf = None
 	chunk_size = None
-	tp, tf, chunk_size = connect_client_to_server(logf, conn, addr, threadNum, s, port, LOG, ALPHA, FAKE_IP)
+	tp, tf, chunk_size = connect_client_to_server(tp, logf, conn, addr, threadNum, s, port, LOG, ALPHA, FAKE_IP)
 	print("tp, tf, chunk_size" + str(tp) + "\n" + str(tf) + "\n" + str(chunk_size))
 	print("============================== end of init connection threadNum: " + str(threadNum))
 #./proxy <log> <alpha> <listen-port> <fake-ip> <web-server-ip>
