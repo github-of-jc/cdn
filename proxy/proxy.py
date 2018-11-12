@@ -35,7 +35,7 @@ def recv_data(threadNum, conn, ss, fake_ip, server_port):
 		f.write(cdata)
 		f.close()
 		print(str(threadNum) + 'received cdata: ============================' + modcdata)
-		return ismod, cdata, modcdata, ts
+		return ismod, cdata, modcdata, ts, chunk_name
 	elif cdata[5:8] == "vod":
 		f = open(str(threadNum)+"cdata.xml", "w")
 		print("========!!!!!!\n" + cdata[4:extension_loc])
@@ -44,7 +44,7 @@ def recv_data(threadNum, conn, ss, fake_ip, server_port):
 		f.write(cdata)
 		f.close()
 		print(str(threadNum) + 'received cdata: ============================' + cdata)
-		return ismod, cdata, modcdata, ts
+		return ismod, cdata, modcdata, ts, chunk_name
 	else:
 		f = open(str(threadNum)+"cdata.xml", "w")
 		print("========!!!!!!\n" + cdata[4:extension_loc])
@@ -52,14 +52,13 @@ def recv_data(threadNum, conn, ss, fake_ip, server_port):
 		f.write(cdata)
 		f.close()
 		print(str(threadNum) + 'received cdata: ============================' + cdata)
-		return ismod, cdata, modcdata, ts
+		return ismod, cdata, modcdata, ts, chunk_name
 
-def reg_send_to_server(logf, alpha, ts, cdata, threadNum, conn, ss, fake_ip, server_port):
+def reg_send_to_server(chunk_name, logf, alpha, ts, cdata, threadNum, conn, ss, fake_ip, server_port):
 	print("received ts: " + str(ts))
 	print("alpha: " + str(alpha))
 	tf = -1
 	req_bitrate = -1
-	chunk_name = None
 	avgtp = -1
 	chunk_size = -1
 	#throughput
@@ -122,7 +121,7 @@ def reg_send_to_server(logf, alpha, ts, cdata, threadNum, conn, ss, fake_ip, ser
 	else:
 		print(str(threadNum) + 'client data is empty, break')
 
-def mod_send_to_server(logf, alpha, ts, cdata, modcdata, threadNum, conn, ss, fake_ip, server_port):
+def mod_send_to_server(chunk_name, logf, alpha, ts, cdata, modcdata, threadNum, conn, ss, fake_ip, server_port):
 	print("#$#$%!$%!#$% IN MODDDDDDD*&^(*(U")
 	print(cdata)
 	print(modcdata)
@@ -130,7 +129,6 @@ def mod_send_to_server(logf, alpha, ts, cdata, modcdata, threadNum, conn, ss, fa
 	print("alpha: " + str(alpha))
 	tf = -1
 	req_bitrate = -1
-	chunk_name = None
 	chunk_size = -1
 	avgtp = -1
 	#throughput
@@ -231,7 +229,7 @@ def connect_client_to_server(logf, conn, addr, threadNum, s, port, LOG, alpha, F
 		loc_list = []
 		while 1:
 			print("enter recv data")
-			ismod, cdata, modcdata, ts = recv_data(threadNum, conn, ss, fake_ip, server_port)
+			ismod, cdata, modcdata, ts, chunk_name = recv_data(threadNum, conn, ss, fake_ip, server_port)
 			print("ISMODISMODISMOD")
 			print(ismod)
 			print("exit recv data")
@@ -239,11 +237,11 @@ def connect_client_to_server(logf, conn, addr, threadNum, s, port, LOG, alpha, F
 			
 			if ismod:
 				print("enter MOD send to server")
-				loc_list, tp, tf, chunk_size = mod_send_to_server(logf, alpha, ts, cdata, modcdata, threadNum, conn, ss, fake_ip, server_port)
+				loc_list, tp, tf, chunk_size = mod_send_to_server(chunk_name, logf, alpha, ts, cdata, modcdata, threadNum, conn, ss, fake_ip, server_port)
 				print("========= \n tf: " + str(tf) + "\n chunksize: " + str(chunk_size
 	))
 				print("exit MOD send to server in try\n go into reg send")
-				tp = reg_send_to_server(logf, alpha, ts, cdata, threadNum, conn, ss, fake_ip, server_port)
+				tp = reg_send_to_server(chunk_name, logf, alpha, ts, cdata, threadNum, conn, ss, fake_ip, server_port)
 				print(str(threadNum) + "loc_list:")
 				print(str(threadNum) + str(loc_list))
 				print(str(threadNum) + "throughput")
@@ -251,7 +249,7 @@ def connect_client_to_server(logf, conn, addr, threadNum, s, port, LOG, alpha, F
 				print("exit reg send")
 			else:
 				print("enter send to server")
-				tp = reg_send_to_server(logf, alpha, ts, cdata, threadNum, conn, ss, fake_ip, server_port)
+				tp = reg_send_to_server(chunk_name, logf, alpha, ts, cdata, threadNum, conn, ss, fake_ip, server_port)
 				print("========= \n tf: " + str(tf) + "\n chunksize: " + str(chunk_size
 	))
 				print("exit send to server in try\nthroughput:" + str(tp))
@@ -273,20 +271,20 @@ def connect_client_to_server(logf, conn, addr, threadNum, s, port, LOG, alpha, F
 			print(str(threadNum) + 'while conn')
 
 			print("enter recv data in except")
-			ismod, cdata, modcdata, ts = recv_data(threadNum, conn, ss, fake_ip, server_port)
+			ismod, cdata, modcdata, ts, chunk_name = recv_data(threadNum, conn, ss, fake_ip, server_port)
 			print("ISMODISMODISMOD")
 			print(ismod)
 			if ismod:
 				print("enter MOD send to server")
-				loc_list, tp, tf, chunk_size = mod_send_to_server(logf, alpha, ts, cdata, modcdata, threadNum, conn, ss, fake_ip, server_port)
+				loc_list, tp, tf, chunk_size = mod_send_to_server(chunk_name, logf, alpha, ts, cdata, modcdata, threadNum, conn, ss, fake_ip, server_port)
 				print("========= \n tf: " + str(tf) + "\n chunksize: " + str(chunk_size
 	))
 				print("exit MOD send to server in try\n go into reg send")
-				tp = reg_send_to_server(logf, alpha, ts, cdata, threadNum, conn, ss, fake_ip, server_port)
+				tp = reg_send_to_server(chunk_name, logf, alpha, ts, cdata, threadNum, conn, ss, fake_ip, server_port)
 				print("exit reg send")
 			else:
 				print("enter send to server")
-				tp = reg_send_to_server(logf, alpha, ts, cdata, threadNum, conn, ss, fake_ip, server_port)
+				tp = reg_send_to_server(chunk_name, logf, alpha, ts, cdata, threadNum, conn, ss, fake_ip, server_port)
 				print("========= \n tf: " + str(tf) + "\n chunksize: " + str(chunk_size
 	))
 			print("exit send to server in except\nthroughput:" + str(tp))
