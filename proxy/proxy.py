@@ -21,6 +21,7 @@ def recv_data(threadNum, conn, ss, fake_ip, server_port):
 	ts = time.time()
 	ismod = False
 	modcdata = None
+	chunk_name = None
 	print("before conn.recv, ts = " + str(ts))
 	packet = conn.recv(10000)
 	#print(str(threadNum) + 'packet is: \n' + packet)
@@ -35,21 +36,34 @@ def recv_data(threadNum, conn, ss, fake_ip, server_port):
 		f.close()
 		print(str(threadNum) + 'received cdata: ============================' + modcdata)
 		return ismod, cdata, modcdata, ts
+	elif cdata[5:8] == "vod":
+		f = open(str(threadNum)+"cdata.xml", "w")
+		print("========!!!!!!\n" + cdata[4:extension_loc])
+		print(cdata[9:extension_loc])
+		chunk_name = cdata[9:extension_loc]
+		f.write(cdata)
+		f.close()
+		print(str(threadNum) + 'received cdata: ============================' + cdata)
+		return ismod, cdata, modcdata, ts
 	else:
 		f = open(str(threadNum)+"cdata.xml", "w")
-		print("========!!!!!!\n" + cdata[extension_loc-4:extension_loc])
+		print("========!!!!!!\n" + cdata[4:extension_loc])
+		print(cdata[5:8])
 		f.write(cdata)
 		f.close()
 		print(str(threadNum) + 'received cdata: ============================' + cdata)
 		return ismod, cdata, modcdata, ts
 
-def reg_send_to_server(alpha, ts, cdata, threadNum, conn, ss, fake_ip, server_port):
+def reg_send_to_server(logf, alpha, ts, cdata, threadNum, conn, ss, fake_ip, server_port):
 	print("received ts: " + str(ts))
 	print("alpha: " + str(alpha))
 	tf = -1
+	req_bitrate = -1
+	chunk_name = None
+	avgtp = -1
 	chunk_size = -1
 	#throughput
-	t = -1
+	tp = -1
 	if len(cdata)>0:
 		print('len(cdata>0)')
 		print(ss)
@@ -71,20 +85,24 @@ def reg_send_to_server(alpha, ts, cdata, threadNum, conn, ss, fake_ip, server_po
 				else:
 					break
 			tf = time.time()
+			tdiff = tf-ts
 			print("tf: " + str(tf))
 			if len(sdata) > 0:
 				#print(str(threadNum) + "server data is:===============================\n" +  sdata)
 				print(str(threadNum) + 'trying to send client the server data')
 				print("chunk size: " + str(len(sdata)))
 				print("calculate throughout:")
-				t = len(sdata)/(tf-ts)
-				print("throughput: " + str(t))
+				tp = len(sdata)/(tf-ts)
+	
+				logf.write(str(tf) + " " + str(tdiff) + " " + str(tp) + " " + str(avgtp) + " " + str(req_bitrate) + " " + str(fake_ip) + " " + str(chunk_name))
+
+				print("throughput: " + str(tp))
 				print("sdata:\n")
 				f = open(str(threadNum)+"sdata.xml", "w")
 				f.write(sdata)
 				conn.send(sdata)
 				print(str(threadNum) + 'successful sending server data to client')
-				return t
+				return tp
 
 		except Exception as e:
 			print("ERROR:" + str(e))
@@ -104,16 +122,19 @@ def reg_send_to_server(alpha, ts, cdata, threadNum, conn, ss, fake_ip, server_po
 	else:
 		print(str(threadNum) + 'client data is empty, break')
 
-def mod_send_to_server(alpha, ts, cdata, modcdata, threadNum, conn, ss, fake_ip, server_port):
+def mod_send_to_server(logf, alpha, ts, cdata, modcdata, threadNum, conn, ss, fake_ip, server_port):
 	print("#$#$%!$%!#$% IN MODDDDDDD*&^(*(U")
 	print(cdata)
 	print(modcdata)
 	print("received ts: " + str(ts))
 	print("alpha: " + str(alpha))
 	tf = -1
+	req_bitrate = -1
+	chunk_name = None
 	chunk_size = -1
+	avgtp = -1
 	#throughput
-	t = -1
+	tp = -1
 	if len(cdata)>0:
 		print('len(cdata>0)')
 		print(ss)
@@ -135,15 +156,16 @@ def mod_send_to_server(alpha, ts, cdata, modcdata, threadNum, conn, ss, fake_ip,
 				else:
 					break
 			tf = time.time()
+			tdiff = tf-ts
 			print("tf: " + str(tf))
 			if len(sdata) > 0:
 				#print(str(threadNum) + "server data is:===============================\n" +  sdata)
 				print(str(threadNum) + 'trying to send client the server data')
 				print("chunk size: " + str(len(sdata)))
 				print("calculate throughout:")
-				
-				t = len(sdata)/(tf-ts)
-				print("throughput: " + str(t))
+				tp = len(sdata)/(tf-ts)
+				logf.write(str(tf) + " " + str(tdiff) + " " + str(tp) + " " + str(avgtp) + " " + str(req_bitrate) + " " + str(fake_ip) + " " + str(chunk_name))
+				print("throughput: " + str(tp))
 				print("sdata:\n")
 				f = open(str(threadNum)+"modsdata.xml", "w")
 				f.write(sdata)
@@ -164,13 +186,13 @@ def mod_send_to_server(alpha, ts, cdata, modcdata, threadNum, conn, ss, fake_ip,
 							loc = sdata.find("bitrate", loc+1)
 							print(loc!=-1)
 						print("final loc_list:\n" + str(loc_list))
-						return loc_list, t, tf, len(sdata)
+						return loc_list, tp, tf, len(sdata)
 					except Exception as e:
 						print("ERROR:" + str(e))
 						print("CAN'T FIND LOC")
 				else:
 					print(":C:C:C:C:C:C:C:CC:C:C:CC:C:CC:C:C:C:C:C:C:C:C:C:C:C:C:C:CC:C:C:C:C:C:C:C::CC:C:C:C:C:C:C")
-				return loc, t, tf, len(sdata)
+				return loc, tp, tf, len(sdata)
 
 		except Exception as e:
 			print("ERROR:" + str(e))
@@ -190,9 +212,9 @@ def mod_send_to_server(alpha, ts, cdata, modcdata, threadNum, conn, ss, fake_ip,
 	else:
 		print(str(threadNum) + 'client data is empty, break')
 
-def connect_client_to_server(conn, addr, threadNum, s, port, LOG, alpha, FAKE_IP):
+def connect_client_to_server(logf, conn, addr, threadNum, s, port, LOG, alpha, FAKE_IP):
 	print('=====================================beginning of thread=' + str(threadNum))
-	t = -1
+	tp = -1
 	tf = -1
 	chunk_size = -1
 	try:
@@ -217,24 +239,24 @@ def connect_client_to_server(conn, addr, threadNum, s, port, LOG, alpha, FAKE_IP
 			
 			if ismod:
 				print("enter MOD send to server")
-				loc_list, t, tf, chunk_size = mod_send_to_server(alpha, ts, cdata, modcdata, threadNum, conn, ss, fake_ip, server_port)
+				loc_list, tp, tf, chunk_size = mod_send_to_server(logf, alpha, ts, cdata, modcdata, threadNum, conn, ss, fake_ip, server_port)
 				print("========= \n tf: " + str(tf) + "\n chunksize: " + str(chunk_size
 	))
 				print("exit MOD send to server in try\n go into reg send")
-				t = reg_send_to_server(alpha, ts, cdata, threadNum, conn, ss, fake_ip, server_port)
+				tp = reg_send_to_server(logf, alpha, ts, cdata, threadNum, conn, ss, fake_ip, server_port)
 				print(str(threadNum) + "loc_list:")
 				print(str(threadNum) + str(loc_list))
 				print(str(threadNum) + "throughput")
-				print(str(threadNum) + str(t))
+				print(str(threadNum) + str(tp))
 				print("exit reg send")
 			else:
 				print("enter send to server")
-				t = reg_send_to_server(alpha, ts, cdata, threadNum, conn, ss, fake_ip, server_port)
+				tp = reg_send_to_server(logf, alpha, ts, cdata, threadNum, conn, ss, fake_ip, server_port)
 				print("========= \n tf: " + str(tf) + "\n chunksize: " + str(chunk_size
 	))
-				print("exit send to server in try\nthroughput:" + t)
+				print("exit send to server in try\nthroughput:" + str(tp))
 		print("END OF THE CONNECTION")
-		return t, tf, chunk_size
+		return tp, tf, chunk_size
 		
 	except Exception as e:
 		print("ERROR:" + str(e))
@@ -244,7 +266,7 @@ def connect_client_to_server(conn, addr, threadNum, s, port, LOG, alpha, FAKE_IP
 			ss = socket.socket()
 			fake_ip = FAKE_IP
 			server_port = 8080
-			t, tf, chunk_size = None, None, None
+			tp, tf, chunk_size = None, None, None
 			print(str(threadNum) + 'connect proxy to server at server ip', fake_ip, ' port ', server_port)
 			ss.connect((fake_ip, server_port))
 			print(str(threadNum) + 'ss connect successful')
@@ -256,21 +278,21 @@ def connect_client_to_server(conn, addr, threadNum, s, port, LOG, alpha, FAKE_IP
 			print(ismod)
 			if ismod:
 				print("enter MOD send to server")
-				loc_list, t, tf, chunk_size = mod_send_to_server(alpha, ts, cdata, modcdata, threadNum, conn, ss, fake_ip, server_port)
+				loc_list, tp, tf, chunk_size = mod_send_to_server(logf, alpha, ts, cdata, modcdata, threadNum, conn, ss, fake_ip, server_port)
 				print("========= \n tf: " + str(tf) + "\n chunksize: " + str(chunk_size
 	))
 				print("exit MOD send to server in try\n go into reg send")
-				t = reg_send_to_server(alpha, ts, cdata, threadNum, conn, ss, fake_ip, server_port)
+				tp = reg_send_to_server(logf, alpha, ts, cdata, threadNum, conn, ss, fake_ip, server_port)
 				print("exit reg send")
 			else:
 				print("enter send to server")
-				t = reg_send_to_server(alpha, ts, cdata, threadNum, conn, ss, fake_ip, server_port)
+				tp = reg_send_to_server(logf, alpha, ts, cdata, threadNum, conn, ss, fake_ip, server_port)
 				print("========= \n tf: " + str(tf) + "\n chunksize: " + str(chunk_size
 	))
-			print("exit send to server in except\nthroughput:" + str(t))
+			print("exit send to server in except\nthroughput:" + str(tp))
 			conn.close()
 			print("return stuff to init connection")
-			return t, tf, chunk_size
+			return tp, tf, chunk_size
 		
 		except Exception as e:
 			print("ERROR:")
@@ -278,17 +300,17 @@ def connect_client_to_server(conn, addr, threadNum, s, port, LOG, alpha, FAKE_IP
 			print(str(threadNum) + 'cannot reestablish connection to server, break')
 			conn.close()
 			print("return stuff")
-			t, tf, chunk_size = None, None, None
-			return t, tf, chunk_size
+			tp, tf, chunk_size = None, None, None
+			return tp, tf, chunk_size
 
 
-def init_connection(conn, addr, threadNum, s, port, LOG, ALPHA, FAKE_IP):
+def init_connection(logf, conn, addr, threadNum, s, port, LOG, ALPHA, FAKE_IP):
 	print("init connection at =============================== threadNum: " + str(threadNum))
-	t = None
+	tp = None
 	tf = None
 	chunk_size = None
-	t, tf, chunk_size = connect_client_to_server(conn, addr, threadNum, s, port, LOG, ALPHA, FAKE_IP)
-	print("t, tf, chunk_size" + str(t) + "\n" + str(tf) + "\n" + str(chunk_size))
+	tp, tf, chunk_size = connect_client_to_server(logf, conn, addr, threadNum, s, port, LOG, ALPHA, FAKE_IP)
+	print("tp, tf, chunk_size" + str(tp) + "\n" + str(tf) + "\n" + str(chunk_size))
 	print("============================== end of init connection threadNum: " + str(threadNum))
 #./proxy <log> <alpha> <listen-port> <fake-ip> <web-server-ip>
 
@@ -327,6 +349,9 @@ print('created socket, now listen')
 s.listen(5) 
 threadNum = 1
 
+print("open file")
+logf = open(LOG, "w")
+
 
 while True:
 	print('=====================================beginning of client loop for thread=' + str(threadNum))
@@ -336,9 +361,10 @@ while True:
 	# open up connection with server
 	# server socket
 	print('created client connection')
-	thread.start_new_thread(init_connection, (conn, addr, threadNum, s, port, LOG, ALPHA, FAKE_IP,))
+	thread.start_new_thread(init_connection, (logf, conn, addr, threadNum, s, port, LOG, ALPHA, FAKE_IP,))
+	logf.write("\n")
 	threadNum = threadNum + 1
-
+logf.close()
 print('end of program')
 
 
